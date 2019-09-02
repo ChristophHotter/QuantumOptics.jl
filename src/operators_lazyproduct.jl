@@ -48,8 +48,7 @@ operators.dense(op::LazyProduct{B1,B2,F,T}) where {B1<:Basis,B2<:Basis,F,T<:Tupl
 SparseArrays.sparse(op::LazyProduct) = op.factor*prod(sparse.(op.operators))
 SparseArrays.sparse(op::LazyProduct{B1,B2,F,T}) where {B1<:Basis,B2<:Basis,F,T<:Tuple{AbstractOperator}} = op.factor*sparse(op.operators[1])
 
-==(x::LazyProduct{B1,B2}, y::LazyProduct{B1,B2}) where {B1,B2} = (x.operators==y.operators && x.factor == y.factor)
-==(::LazyProduct, ::LazyProduct) = false
+==(x::LazyProduct{B1,B2}, y::LazyProduct{B1,B2}) where {B1,B2} = (x.basis_l == y.basis_l && x.basis_r == y.basis_r && x.operators==y.operators && x.factor == y.factor)
 
 # Arithmetic operations
 -(a::T) where T<:LazyProduct = T(a.operators, -a.factor)
@@ -110,7 +109,7 @@ function operators.gemm!(alpha, a::DenseOperator{B1,B2}, b::LazyProduct{B2,B3}, 
     tmp1 = DenseOperator(a.basis_l,b.operators[1].basis_r)
     operators.gemm!(b.factor, a, b.operators[1], 0, tmp1)
     for i=2:length(b.operators)-1
-        tmp2 = DenseOperator(a.basis_l,b.operators[i].basis_l)
+        tmp2 = DenseOperator(a.basis_l,b.operators[i].basis_r)
         operators.gemm!(1, tmp1, b.operators[i], 0, tmp2)
         tmp1 = tmp2
     end

@@ -46,8 +46,7 @@ operators.dense(op::LazySum{B1,B2,F,T}) where {B1<:Basis,B2<:Basis,F,T<:Tuple{Ab
 SparseArrays.sparse(op::LazySum) = sum(op.factors .* sparse.(op.operators))
 SparseArrays.sparse(op::LazySum{B1,B2,F,T}) where {B1<:Basis,B2<:Basis,F,T<:Tuple{AbstractOperator{B1,B2}}} = op.factors[1] * sparse(op.operators[1])
 
-==(x::LazySum{B1,B2}, y::LazySum{B1,B2}) where {B1,B2} = (x.operators==y.operators && x.factors==y.factors)
-==(::LazySum, ::LazySum) = false
+==(x::LazySum, y::LazySum) = (x.basis_l == y.basis_l && x.basis_r == y.basis_r && x.operators==y.operators && x.factors==y.factors)
 
 # Arithmetic operations
 +(a::LazySum{B1,B2,F1,T1}, b::LazySum{B1,B2,F2,T2}) where {B1<:Basis,B2<:Basis,F1,F2,T1<:Tuple{Vararg{AbstractOperator{B1,B2}}},T2<:Tuple{Vararg{AbstractOperator{B1,B2}}}} = LazySum([a.factors; b.factors], (a.operators..., b.operators...))
@@ -103,7 +102,7 @@ function operators.gemm!(alpha, a::LazySum{B1,B2}, b::DenseOperator{B2,B3}, beta
 end
 function operators.gemm!(alpha, a::DenseOperator{B1,B2}, b::LazySum{B2,B3}, beta, result::DenseOperator{B1,B3}) where {B1<:Basis,B2<:Basis,B3<:Basis}
     operators.gemm!(alpha*b.factors[1], a, b.operators[1], beta, result)
-    for i=2:length(a.operators)
+    for i=2:length(b.operators)
         operators.gemm!(alpha*b.factors[i], a, b.operators[i], 1, result)
     end
 end
